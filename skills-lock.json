@@ -127,6 +127,12 @@
       "skillPath": "pm-product-discovery/skills/analyze-feature-requests/SKILL.md",
       "computedHash": "c0c1815f750b4a0ff6dccd5accdec50659ddc4015de80a4dc51e0608b6d71587"
     },
+    "anatomy": {
+      "source": "wheresryan22/anatomy",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "37fe1f16683eddee1b3723a3fe8e4a5b92bb653a6991128a372d3268730cdc90"
+    },
     "android-clean-architecture": {
       "source": "affaan-m/everything-claude-code",
       "sourceType": "github",
