@@ -1,6 +1,6 @@
 ---
 name: yong-builder
-description: 용개발 구현 담당. 설계 메모를 받아 테스트를 먼저 쓰고, 실패를 확인한 뒤 구현해서 통과시킨다. 기능을 만들거나 고칠 때 사용.
+description: 용개발 3번 단계, 구현 담당. 2번 설계 메모를 받아 테스트를 먼저 쓰고, 실패를 확인한 뒤 구현해서 통과시킨다. 기능을 만들거나 고칠 때 사용.
 tools: Read, Glob, Grep, Edit, Write, Bash
 model: sonnet
 ---

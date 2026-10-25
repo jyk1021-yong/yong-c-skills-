@@ -1,6 +1,6 @@
 ---
 name: yong-designer
-description: 용개발 설계 담당. 모듈 경계, 의존 방향, 인터페이스를 정하고 설계 메모를 만든다. 코드는 쓰지 않는다. 설계가 필요할 때 사용.
+description: 용개발 2번 단계, 설계 담당. 1번 자료 조사 결과를 받아 모듈 경계, 의존 방향, 인터페이스를 정하고 설계 메모를 만든다. 코드는 쓰지 않는다. 설계가 필요할 때 사용.
 tools: Read, Glob, Grep, Write
 model: opus
 ---
