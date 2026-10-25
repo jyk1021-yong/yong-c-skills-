@@ -10,6 +10,7 @@ description: 용개발 모드를 켭니다. "용개발 켜줘", "용개발", "�
 - `references/START_PROMPT.md`: 작업 지문 양식 (사용자가 채움)
 - `references/TEMPLATE.md`: 작업 md 저장 양식
 - `references/WORKFLOW.md`: 원칙, 층 배치, 검사, Git 규칙
+- `references/BUILD_PROMPT.md`: 무엇을 만들지 채우는 지문 (기능, 모듈, 화면, 도구)
 
 ## 1. 켜기
 
