@@ -12,9 +12,9 @@
   }
 
   const DEFAULT_STYLE = deepFreeze({
-    skin: { color: 0xd9b28c, roughness: 0.6 },
+    skin: { color: 0x2f7a3e, roughness: 0.9 },
     hair: { color: 0x2a1d14, roughness: 0.9 },
-    face: { eyeColor: 0x111111, mouthColor: 0x7a3b2e, expression: 'smile' },
+    face: { eyeColor: 0xffffff, mouthColor: 0x1b4a26, expression: 'neutral' },
     top: { color: 0xe5e7eb, roughness: 0.8 },
     bottom: { color: 0x1e293b, roughness: 0.8 },
     xray: { baseOpacity: 0.35, overlayOpacity: 0.2 },

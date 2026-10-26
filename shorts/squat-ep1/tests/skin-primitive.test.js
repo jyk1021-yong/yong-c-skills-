@@ -5,11 +5,12 @@ const THREE = require('../three.min.js');
 const Rig = require('../modules/rig.js');
 const CS = require('../modules/character-style.js');
 const Skin = require('../modules/skin-primitive.js');
+const Sculpt = require('../modules/sculpt.js');
 
 const setup = (over) => {
   const rig = Rig.buildRig(THREE);
   const style = CS.resolveStyle(over);
-  return { rig, style, handle: Skin.build(THREE, rig.joints, style) };
+  return { rig, style, handle: Skin.build(THREE, rig.joints, style, Sculpt) };
 };
 const groupsOf = (j) => [j.pelvis, j.upper, ...j.arms, ...j.legs.flatMap((l) => [l.hip, l.thigh, l.knee])];
 const counts = (j) => groupsOf(j).map((g) => g.children.length);
@@ -17,11 +18,11 @@ const mats = (h) => [...new Set(h.meshes.map((m) => m.material))];
 
 test('T4 handle structure', () => {
   const { handle } = setup();
-  assert.strictEqual(handle.meshes.length, 22);
+  assert.strictEqual(handle.meshes.length, 19); // 피부 14 + 눈 2 + 하의 3 (머리카락, 윗옷, 입 없음)
   assert.ok(Object.isFrozen(handle));
   assert.strictEqual(typeof handle.setXray, 'function');
   assert.strictEqual(typeof handle.dispose, 'function');
-  assert.strictEqual(mats(handle).length, 6);
+  assert.strictEqual(mats(handle).length, 3); // 피부, 눈, 하의
 });
 
 test('T4 base skin regression', () => {
@@ -38,17 +39,17 @@ test('T4 base skin regression', () => {
   assert.ok(head);
   assert.deepStrictEqual([head.position.x, head.position.y, head.position.z], [0, 1.25, 0.01]);
   assert.deepStrictEqual([head.scale.x, head.scale.y, head.scale.z], [1, 1.15, 1]);
-  assert.strictEqual(skinMat.color.getHex(), 0xd9b28c);
-  assert.strictEqual(skinMat.roughness, 0.6);
+  assert.strictEqual(skinMat.color.getHex(), 0x2f7a3e);
+  assert.ok(skinMat.roughness >= 0.85, 'matte skin');
+  for (const m of skin) assert.strictEqual(m.geometry.type, 'SphereGeometry');
 });
 
-test('T4 clothing colors', () => {
+test('T4 clothing: shorts only, bare torso', () => {
   const { handle, style } = setup();
-  const top = handle.meshes.find((m) => m.material.color.getHex() === style.top.color);
-  const bottom = handle.meshes.find((m) => m.material.color.getHex() === style.bottom.color);
-  assert.ok(top && bottom);
-  assert.notStrictEqual(top.material, bottom.material);
-  assert.notStrictEqual(style.top.color, style.bottom.color);
+  const bottom = handle.meshes.filter((m) => m.material.color.getHex() === style.bottom.color);
+  assert.strictEqual(bottom.length, 3);
+  assert.strictEqual(style.bottom.color, 0x1e293b); // 기존 하의 값 유지
+  assert.strictEqual(handle.meshes.filter((m) => m.material.color.getHex() === style.top.color).length, 0);
 });
 
 test('T4 bottom covers glutes', () => {
@@ -66,19 +67,23 @@ test('T4 bottom covers glutes', () => {
 });
 
 test('T4 face', () => {
-  const { rig, handle, style } = setup();
+  const { rig, handle, style } = setup({ face: { expression: 'smile' } });
   const eyes = handle.meshes.filter((m) => m.material.color.getHex() === style.face.eyeColor);
   const mouth = handle.meshes.filter((m) => m.material.color.getHex() === style.face.mouthColor);
   assert.strictEqual(eyes.length, 2);
+  assert.strictEqual(style.face.eyeColor, 0xffffff);
   assert.strictEqual(mouth.length, 1);
   for (const m of [...eyes, ...mouth]) {
     assert.strictEqual(m.parent, rig.joints.upper);
     assert.ok(m.position.z > 0.01);
   }
   const smile = mouth[0].geometry.type;
-  const neutral = setup({ face: { expression: 'neutral' } }).handle.meshes
-    .find((m) => m.material.color.getHex() === style.face.mouthColor).geometry.type;
-  assert.notStrictEqual(smile, neutral);
+  assert.strictEqual(smile, 'TorusGeometry');
+  // 기본 표정(neutral)은 눈 두 개만, 입 없음
+  const d = setup();
+  assert.strictEqual(d.style.face.expression, 'neutral');
+  assert.strictEqual(d.handle.meshes.filter((m) => m.material.color.getHex() === d.style.face.mouthColor).length, 0);
+  assert.strictEqual(d.handle.meshes.filter((m) => m.material.color.getHex() === d.style.face.eyeColor).length, 2);
 });
 
 test('T4 attachment parents are joints', () => {
@@ -113,18 +118,20 @@ test('T6 build failures are atomic', () => {
   const j = rig.joints;
   const style = CS.resolveStyle();
   const before = counts(j);
-  assert.throws(() => Skin.build(THREE, { ...j, legs: [j.legs[0]] }, style), (e) => e instanceof TypeError && e.message.includes('legs[1]'));
+  assert.throws(() => Skin.build(THREE, { ...j, legs: [j.legs[0]] }, style, Sculpt), (e) => e instanceof TypeError && e.message.includes('legs[1]'));
   assert.deepStrictEqual(counts(j), before);
-  assert.throws(() => Skin.build(THREE, j, {}), TypeError);
+  assert.throws(() => Skin.build(THREE, j, {}, Sculpt), TypeError);
   assert.deepStrictEqual(counts(j), before);
-  assert.throws(() => Skin.build({}, j, style), TypeError);
+  assert.throws(() => Skin.build({}, j, style, Sculpt), TypeError);
+  assert.deepStrictEqual(counts(j), before);
+  assert.throws(() => Skin.build(THREE, j, style), (e) => e instanceof TypeError && e.message.includes('sculpt'));
   assert.deepStrictEqual(counts(j), before);
 });
 
 test('T6 dispose cleans up', () => {
   const rig = Rig.buildRig(THREE);
   const before = counts(rig.joints);
-  const handle = Skin.build(THREE, rig.joints, CS.resolveStyle());
+  const handle = Skin.build(THREE, rig.joints, CS.resolveStyle(), Sculpt);
   const geos = new Set(handle.meshes.map((m) => m.geometry));
   const ms = new Set(handle.meshes.map((m) => m.material));
   let g = 0, m = 0;
@@ -141,7 +148,9 @@ test('T6 dispose cleans up', () => {
   assert.throws(() => handle.setXray(true), /skin disposed/);
 });
 
-// X-ray 끔일 때 몸통, 다리 근육(가슴 제외)이 피부 안에 있어야 한다.
+// X-ray 끔일 때 몸통, 다리 근육이(가슴 포함: 대흉근 봉우리가 덮는다)
+// 판정은 기본 타원체(반지름) 기준이다. sculpt는 바깥쪽으로만 밀기 때문에(sculpt.test S2) 실제 피부 면은 그 바깥에 있다.
+// X-ray 끔일 때 피부 안에 있어야 한다.
 function insideSkin(THREE, skinMeshes, worldPoint) {
   return skinMeshes.some((s) => {
     const p = worldPoint.clone().applyMatrix4(s.matrixWorld.clone().invert());
@@ -174,4 +183,28 @@ test('T5 xray off: quad, hams, calf, core are inside the skin', () => {
       assert.strictEqual(outside, 0, `${key}: ${outside} vertices outside skin`);
     }
   }
+});
+
+// 가슴 근육은 기본 타원체 밖으로 나가고 대흉근 봉우리가 덮는다. 기본 구 판정이 안 맞으므로 실제 정점 면으로 쏴서 확인한다.
+test('T5 xray off: chest is under the sculpted pec surface', () => {
+  const { rig, handle } = setup();
+  handle.setXray(false);
+  rig.root.updateMatrixWorld(true);
+  const torso = handle.meshes.find((m) => m.parent === rig.joints.upper && Math.abs(m.position.y - 0.55) < 1e-9);
+  const side = torso.material.side;
+  torso.material.side = THREE.DoubleSide;
+  const center = new THREE.Vector3().setFromMatrixPosition(torso.matrixWorld);
+  let outside = 0;
+  for (const { mesh } of rig.muscles.filter((x) => x.key === 'chest')) {
+    const pos = mesh.geometry.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+      const w = new THREE.Vector3().fromBufferAttribute(pos, i).applyMatrix4(mesh.matrixWorld);
+      const dir = w.clone().sub(center);
+      const dist = dir.length();
+      const hits = new THREE.Raycaster(center, dir.normalize()).intersectObject(torso);
+      if (!hits.length || hits[hits.length - 1].distance < dist) outside++;
+    }
+  }
+  torso.material.side = side;
+  assert.strictEqual(outside, 0, `chest: ${outside} vertices outside skin`);
 });

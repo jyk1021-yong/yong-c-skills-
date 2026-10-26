@@ -51,6 +51,7 @@
 <script src="modules/motion.js"></script>
 <script src="modules/character-style.js"></script>
 <script src="modules/rig.js"></script>
+<script src="modules/sculpt.js"></script>
 <script src="modules/skin-primitive.js"></script>
 <script>
 const { depthAt, activationAt, poseAt, cueAt, pulseAt, CYCLE_MS } = SquatMotion;
@@ -73,9 +74,12 @@ const camera = new THREE.PerspectiveCamera(35, 9 / 16, 0.1, 100);
 camera.position.set(0, 1.1, 4.6);
 camera.lookAt(0, 0.95, 0);
 
-scene.add(new THREE.HemisphereLight(0xffffff, 0x334455, 1.0));
-const key = new THREE.DirectionalLight(0xffffff, 1.1);
-key.position.set(3, 5, 4);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x334455, 0.55));
+const key = new THREE.DirectionalLight(0xffffff, 1.9);
+key.position.set(2.5, 4, 3.5);
+const rim = new THREE.DirectionalLight(0xbfe8ff, 0.7);
+rim.position.set(-3, 2, -2);
+scene.add(rim);
 scene.add(key);
 
 const floor = new THREE.Mesh(
@@ -89,7 +93,7 @@ scene.add(floor);
 const style = CharacterStyle.resolveStyle();
 const rig = SquatRig.buildRig(THREE);
 scene.add(rig.root);
-const skin = PrimitiveSkin.build(THREE, rig.joints, style);
+const skin = PrimitiveSkin.build(THREE, rig.joints, style, Sculpt);
 
 // 피부 가시성: X-ray 켜면 반투명, 끄면 불투명 (근육이 가려짐)
 let xray = true;

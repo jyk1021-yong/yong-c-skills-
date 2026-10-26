@@ -42,8 +42,10 @@ test('T2 resolveStyle does not mutate input', () => {
 });
 
 test('T2 regression of existing skin values', () => {
-  assert.strictEqual(CS.DEFAULT_STYLE.skin.color, 0xd9b28c);
-  assert.strictEqual(CS.DEFAULT_STYLE.skin.roughness, 0.6);
+  assert.strictEqual(CS.DEFAULT_STYLE.skin.color, 0x2f7a3e); // 우람이: 짙은 초록 무광
+  assert.strictEqual(CS.DEFAULT_STYLE.skin.roughness, 0.9);
+  assert.strictEqual(CS.DEFAULT_STYLE.bottom.color, 0x1e293b);
+  assert.strictEqual(CS.DEFAULT_STYLE.bottom.roughness, 0.8);
   assert.strictEqual(CS.DEFAULT_STYLE.xray.baseOpacity, 0.35);
   assert.strictEqual(CS.DEFAULT_STYLE.xray.overlayOpacity, 0.2);
 });

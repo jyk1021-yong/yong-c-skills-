@@ -1,4 +1,5 @@
-// 장면 모듈: 기본 피부 공급자. 피부, 머리카락, 얼굴, 옷을 관절에 붙인다.
+// 장면 모듈: 근육질 피부 공급자. 조각한 피부(sculpt), 얼굴(눈), 반바지를 관절에 붙인다.
+// sculpt 모듈은 화면이 넘겨준다(모듈끼리 직접 부르지 않는다).
 (function (root, factory) {
   const api = factory();
   if (typeof module === 'object' && module.exports) module.exports = api;
@@ -6,13 +7,13 @@
 })(this, function () {
   const THREE_CTORS = ['Mesh', 'MeshStandardMaterial', 'SphereGeometry', 'CapsuleGeometry', 'TorusGeometry'];
   const STYLE_PATHS = [
-    'skin.color', 'skin.roughness', 'hair.color', 'hair.roughness',
+    'skin.color', 'skin.roughness',
     'face.eyeColor', 'face.mouthColor', 'face.expression',
-    'top.color', 'top.roughness', 'bottom.color', 'bottom.roughness',
+    'bottom.color', 'bottom.roughness',
     'xray.baseOpacity', 'xray.overlayOpacity',
   ];
 
-  function validate(THREE, joints, style) {
+  function validate(THREE, joints, style, sculpt) {
     if (!THREE) throw new TypeError('THREE is required');
     for (const n of THREE_CTORS) {
       if (typeof THREE[n] !== 'function') throw new TypeError(`THREE.${n} is required`);
@@ -32,25 +33,28 @@
       const [g, k] = p.split('.');
       if (!style[g] || style[g][k] === undefined) throw new TypeError(`missing style.${p}`);
     }
+    if (!sculpt) throw new TypeError('sculpt is required');
+    for (const n of ['torso', 'shoulders', 'neck', 'head', 'upperArm', 'foreArm', 'thigh', 'calf', 'foot']) {
+      if (typeof sculpt[n] !== 'function') throw new TypeError(`sculpt.${n} is required`);
+    }
   }
 
-  function build(THREE, joints, style) {
-    validate(THREE, joints, style);
+  function build(THREE, joints, style, sculpt) {
+    validate(THREE, joints, style, sculpt);
 
     const meshes = [];
     const attached = [];
     const geometries = new Set();
     const mat = (color, roughness) => new THREE.MeshStandardMaterial({ color, roughness, transparent: true });
+    const smile = style.face.expression === 'smile';
     const m = {
       skin: mat(style.skin.color, style.skin.roughness),
-      hair: mat(style.hair.color, style.hair.roughness),
       eye: mat(style.face.eyeColor, 0.4),
-      mouth: mat(style.face.mouthColor, 0.6),
-      top: mat(style.top.color, style.top.roughness),
       bottom: mat(style.bottom.color, style.bottom.roughness),
     };
+    if (smile) m.mouth = mat(style.face.mouthColor, 0.6);
     const baseMats = [m.skin];
-    const overlayMats = [m.hair, m.eye, m.mouth, m.top, m.bottom];
+    const overlayMats = [m.eye, m.bottom, ...(smile ? [m.mouth] : [])];
 
     function add(parent, geo, material, x, y, z, sx, sy, sz) {
       const mesh = new THREE.Mesh(geo, material);
@@ -65,40 +69,38 @@
       add(parent, new THREE.CapsuleGeometry(r, len, 8, 16), material, x, y, z);
     const blob = (parent, r, sx, sy, sz, material, x, y, z) =>
       add(parent, new THREE.SphereGeometry(r, 24, 16), material, x, y, z, sx, sy, sz);
+    // sculpt 부위({ geometry, scale })를 피부로 붙인다
+    const skinPart = (parent, part, x, y, z) => add(parent, part.geometry, m.skin, x, y, z, ...part.scale);
 
     const { pelvis, upper, arms, legs } = joints;
 
-    // 기본 피부 14개
-    capsule(upper, 0.2, 0.4, m.skin, 0, 0.55, 0);
-    blob(upper, 0.14, 1.2, 0.8, 0.8, m.skin, 0, 0.92, 0);
-    blob(upper, 0.12, 1, 1, 1, m.skin, 0, 1.08, 0);
-    blob(upper, 0.13, 1, 1.15, 1, m.skin, 0, 1.25, 0.01); // 머리
-    for (const arm of arms) {
-      capsule(arm, 0.065, 0.3, m.skin, 0, -0.2, 0);
-      capsule(arm, 0.055, 0.28, m.skin, 0, -0.6, 0.02);
-    }
-    for (const leg of legs) {
-      capsule(leg.thigh, 0.1, 0.22, m.skin, 0, -0.21, 0);
-      capsule(leg.knee, 0.07, 0.22, m.skin, 0, -0.2, 0);
-      blob(leg.knee, 0.05, 1.4, 0.6, 2.0, m.skin, 0, -0.44, 0.06); // 발
-    }
+    // 피부 14개: 몸통 4(몸통, 어깨, 목, 머리), 팔 2x2, 다리 2x3
+    skinPart(upper, sculpt.torso(THREE), 0, 0.55, 0);
+    skinPart(upper, sculpt.shoulders(THREE), 0, 0.9, 0);
+    skinPart(upper, sculpt.neck(THREE), 0, 1.08, 0);
+    skinPart(upper, sculpt.head(THREE), 0, 1.25, 0.01); // 머리
+    arms.forEach((arm, i) => {
+      const side = i === 0 ? -1 : 1;
+      // 팔 중심을 몸 바깥쪽으로 조금 비켜 몸통과 갈라 보이게 한다
+      skinPart(arm, sculpt.upperArm(THREE, side), side * 0.03, -0.2, 0);
+      skinPart(arm, sculpt.foreArm(THREE, side), side * 0.03, -0.6, 0.02);
+    });
+    legs.forEach((leg, i) => {
+      const side = i === 0 ? -1 : 1;
+      skinPart(leg.thigh, sculpt.thigh(THREE, side), 0, -0.2, 0);
+      skinPart(leg.knee, sculpt.calf(THREE, side), 0, -0.19, 0);
+      skinPart(leg.knee, sculpt.foot(THREE), 0, -0.44, 0.06); // 발
+    });
 
-    // 머리카락: 머리 위 반구
-    add(upper, new THREE.SphereGeometry(0.14, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), m.hair,
-      0, 1.275, -0.012, 1, 1.15, 1);
-
-    // 눈, 입 (카메라 쪽 +z 얼굴 면)
-    blob(upper, 0.016, 1, 1, 0.6, m.eye, -0.045, 1.275, 0.126);
-    blob(upper, 0.016, 1, 1, 0.6, m.eye, 0.045, 1.275, 0.126);
-    if (style.face.expression === 'smile') {
-      const mouth = add(upper, new THREE.TorusGeometry(0.04, 0.006, 8, 16, Math.PI), m.mouth, 0, 1.2, 0.127);
+    // 눈: 흰 점 두 개 (카메라 쪽 +z 얼굴 면)
+    blob(upper, 0.014, 1, 1, 0.6, m.eye, -0.045, 1.275, 0.112);
+    blob(upper, 0.014, 1, 1, 0.6, m.eye, 0.045, 1.275, 0.112);
+    if (smile) {
+      const mouth = add(upper, new THREE.TorusGeometry(0.04, 0.006, 8, 16, Math.PI), m.mouth, 0, 1.2, 0.108);
       mouth.rotation.z = Math.PI; // 아래로 굽은 호
-    } else {
-      blob(upper, 0.03, 1, 0.25, 0.4, m.mouth, 0, 1.2, 0.127);
     }
 
-    // 옷
-    capsule(upper, 0.208, 0.4, m.top, 0, 0.55, 0);
+    // 반바지 (윗옷 없음: 맨몸 근육을 드러낸다)
     blob(pelvis, 0.15, 2.0, 1.1, 1.1, m.bottom, 0, -0.05, -0.08);
     for (const leg of legs) capsule(leg.thigh, 0.108, 0.02, m.bottom, 0, -0.07, 0);
 
