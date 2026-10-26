@@ -1,5 +1,5 @@
 #!/bin/bash
-# Installs graphify (PyPI package "graphifyy") and registers its Claude Code skill.
+# Installs yt-dlp and graphify (PyPI package "graphifyy"), then registers graphify's Claude Code skill.
 # Cloud sessions only; safe to run repeatedly.
 set -euo pipefail
 
@@ -11,6 +11,10 @@ export PATH="$HOME/.local/bin:$PATH"
 
 if ! command -v uv >/dev/null 2>&1; then
   pip install --quiet uv
+fi
+
+if ! command -v yt-dlp >/dev/null 2>&1; then
+  uv tool install yt-dlp
 fi
 
 if ! command -v graphify >/dev/null 2>&1; then
