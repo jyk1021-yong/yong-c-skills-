@@ -11,7 +11,7 @@
   html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg);
     font-family: system-ui, -apple-system, "Noto Sans KR", sans-serif; }
   body { display: flex; align-items: center; justify-content: center; }
-  #frame { position: relative; height: min(100vh, 960px); aspect-ratio: 9 / 16; max-width: 100vw;
+  #frame { position: relative; width: min(100vw, calc(100vh * 9 / 16), 540px); aspect-ratio: 9 / 16;
     overflow: hidden; border-radius: 16px; background: #1a1f2b; }
   canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   #hud { position: absolute; left: 0; right: 0; top: 0; padding: 24px 20px; text-align: center;
@@ -48,54 +48,12 @@
 </div>
 
 <script src="three.min.js"></script>
+<script src="modules/motion.js"></script>
+<script src="modules/character-style.js"></script>
+<script src="modules/rig.js"></script>
+<script src="modules/skin-primitive.js"></script>
 <script>
-// ---- 순수 함수: 시간 → 자세와 활성도 (화면과 분리, 테스트 가능) ----
-
-const CYCLE_MS = 3200;
-
-function smooth(x) {
-  return 0.5 - 0.5 * Math.cos(Math.PI * Math.min(Math.max(x, 0), 1));
-}
-
-// 0 = 선 자세, 1 = 바닥 자세. 내려가기 40%, 바닥 유지 10%, 올라오기 40%, 위 유지 10%
-function depthAt(ms) {
-  const t = (ms % CYCLE_MS) / CYCLE_MS;
-  if (t < 0.4) return smooth(t / 0.4);
-  if (t < 0.5) return 1;
-  if (t < 0.9) return 1 - smooth((t - 0.5) / 0.4);
-  return 0;
-}
-
-// 근육별 활성도 (0~1)
-function activationAt(depth) {
-  return {
-    glute: depth,
-    quad: depth,
-    hams: depth * 0.7,
-    calf: depth * 0.3,
-  };
-}
-
-// 자세 값 (골반 높이, 골반 뒤로 이동, 상체 기울기, 엉덩이·무릎 각도, 팔 각도)
-function poseAt(depth) {
-  return {
-    pelvisY: 1.0 - depth * 0.42,
-    pelvisZ: -depth * 0.25,
-    lean: depth * 0.3,
-    hip: -depth * 1.2,
-    knee: depth * 0.9,
-    arm: -depth * 1.4,
-  };
-}
-
-// 단계별 큐 자막
-function cueAt(ms) {
-  const t = (ms % CYCLE_MS) / CYCLE_MS;
-  if (t < 0.4) return '엉덩이를 뒤로 빼고, 가슴은 위로';
-  if (t < 0.5) return '무릎은 발끝 방향, 허리는 곧게';
-  if (t < 0.9) return '엉덩이로 밀어 올리기';
-  return '두 발은 어깨너비, 다시 시작';
-}
+const { depthAt, activationAt, poseAt, cueAt, pulseAt, CYCLE_MS } = SquatMotion;
 
 // ---- 화면 ----
 
@@ -127,117 +85,20 @@ const floor = new THREE.Mesh(
 floor.rotation.x = -Math.PI / 2;
 scene.add(floor);
 
-// 피부: 공용 재질. X-ray 켜면 투명해져 안쪽 근육이 보인다
-const skinMat = new THREE.MeshStandardMaterial({
-  color: 0xd9b28c, roughness: 0.6, transparent: true, opacity: 0.35, depthWrite: false,
-});
-
-// 근육: 종류별 재질 (emissive 값을 매 프레임 바꿔 켜고 끈다)
-const COLORS = { glute: 0x3b82f6, quad: 0xef4444, hams: 0xf97316, calf: 0x22c55e, core: 0xfacc15, chest: 0xf43f5e };
-const muscleMats = {};
-for (const k of Object.keys(COLORS)) {
-  muscleMats[k] = new THREE.MeshStandardMaterial({
-    color: COLORS[k], emissive: COLORS[k], emissiveIntensity: 0.1, roughness: 0.5,
-  });
-}
-
-function capsule(radius, length, mat, x, y, z) {
-  const m = new THREE.Mesh(new THREE.CapsuleGeometry(radius, length, 8, 16), mat);
-  m.position.set(x, y, z);
-  return m;
-}
-function blob(r, sx, sy, sz, mat, x, y, z) {
-  const m = new THREE.Mesh(new THREE.SphereGeometry(r, 24, 16), mat);
-  m.scale.set(sx, sy, sz);
-  m.position.set(x, y, z);
-  return m;
-}
-
-// 뼈대 그룹: 골반 → 상체, 골반 → 허벅지 → 종아리
-const root = new THREE.Group();
-scene.add(root);
-
-const pelvis = new THREE.Group();
-pelvis.position.y = 1.0;
-root.add(pelvis);
-
-const upper = new THREE.Group();
-pelvis.add(upper);
-
-const skinParts = [];
-const activeMuscles = []; // { mesh, key }
-
-function addMuscle(parent, key, mesh) {
-  parent.add(mesh);
-  activeMuscles.push({ mesh, key });
-}
-function addSkin(parent, mesh) {
-  parent.add(mesh);
-  skinParts.push(mesh);
-}
-
-// 몸통
-addSkin(upper, capsule(0.2, 0.4, skinMat, 0, 0.55, 0));
-addSkin(upper, blob(0.14, 1.2, 0.8, 0.8, skinMat, 0, 0.92, 0)); // 어깨 덩어리
-addSkin(upper, blob(0.12, 1, 1, 1, skinMat, 0, 1.08, 0)); // 목 덩어리 (머리 받침)
-const head = blob(0.13, 1, 1.15, 1, skinMat, 0, 1.25, 0.01);
-addSkin(upper, head);
-
-// 가슴, 복근 (근육)
-addMuscle(upper, 'chest', blob(0.09, 1.3, 0.8, 0.6, muscleMats.chest, -0.1, 0.7, 0.17));
-addMuscle(upper, 'chest', blob(0.09, 1.3, 0.8, 0.6, muscleMats.chest, 0.1, 0.7, 0.17));
-addMuscle(upper, 'core', blob(0.1, 0.6, 1.5, 0.3, muscleMats.core, 0, 0.45, 0.18));
-
-// 팔 (어깨 기준 회전)
-for (const side of [-1, 1]) {
-  const arm = new THREE.Group();
-  arm.position.set(side * 0.3, 0.85, 0);
-  upper.add(arm);
-  arm.userData.isArm = true;
-  addSkin(arm, capsule(0.065, 0.3, skinMat, 0, -0.2, 0));
-  addSkin(arm, capsule(0.055, 0.28, skinMat, 0, -0.6, 0.02));
-}
-
-// 다리 (좌우)
-const legs = [];
-for (const side of [-1, 1]) {
-  const hip = new THREE.Group();
-  hip.position.set(side * 0.13, -0.08, 0);
-  pelvis.add(hip);
-
-  // 둔근
-  addMuscle(pelvis, 'glute', blob(0.13, 1, 0.9, 0.9, muscleMats.glute, side * 0.14, -0.05, -0.08));
-
-  const thigh = new THREE.Group();
-  hip.add(thigh);
-  addSkin(thigh, capsule(0.1, 0.22, skinMat, 0, -0.21, 0));
-  addMuscle(thigh, 'quad', blob(0.085, 0.75, 1.0, 0.6, muscleMats.quad, 0, -0.2, 0.07));
-  addMuscle(thigh, 'hams', blob(0.08, 0.75, 1.0, 0.6, muscleMats.hams, 0, -0.2, -0.07));
-
-  const knee = new THREE.Group();
-  knee.position.set(0, -0.42, 0);
-  thigh.add(knee);
-  addSkin(knee, capsule(0.07, 0.22, skinMat, 0, -0.2, 0));
-  addMuscle(knee, 'calf', blob(0.065, 0.8, 1.0, 0.8, muscleMats.calf, 0, -0.2, -0.06));
-  addSkin(knee, blob(0.05, 1.4, 0.6, 2.0, skinMat, 0, -0.44, 0.06)); // 발
-
-  legs.push({ hip, knee, thigh });
-}
-
-const arms = upper.children.filter((c) => c.userData.isArm);
+// 조립: 뼈대와 근육(rig), 피부 공급자(skin)
+const style = CharacterStyle.resolveStyle();
+const rig = SquatRig.buildRig(THREE);
+scene.add(rig.root);
+const skin = PrimitiveSkin.build(THREE, rig.joints, style);
 
 // 피부 가시성: X-ray 켜면 반투명, 끄면 불투명 (근육이 가려짐)
 let xray = true;
-function applyXray() {
-  skinMat.opacity = xray ? 0.35 : 1.0;
-  skinMat.depthWrite = !xray;
-  skinMat.needsUpdate = true;
-}
+skin.setXray(xray);
 btnXray.addEventListener('click', () => {
   xray = !xray;
   btnXray.setAttribute('aria-pressed', String(xray));
   btnXray.textContent = xray ? 'X-ray 켜기' : 'X-ray 끄기';
-  applyXray();
+  skin.setXray(xray);
 });
 
 let paused = false;
@@ -268,24 +129,10 @@ function update(dtMs) {
   const depth = depthAt(elapsed);
   const pose = poseAt(depth);
   const act = activationAt(depth);
-  const pulse = 0.85 + 0.15 * Math.sin(elapsed / 120);
+  const pulse = pulseAt(elapsed);
 
-  pelvis.position.y = pose.pelvisY;
-  pelvis.position.z = pose.pelvisZ;
-  upper.rotation.x = pose.lean;
-
-  for (const leg of legs) {
-    leg.hip.rotation.x = pose.hip;
-    leg.knee.rotation.x = pose.knee;
-  }
-  for (const arm of arms) {
-    arm.rotation.x = pose.arm;
-  }
-
-  for (const { mesh, key } of activeMuscles) {
-    const level = act[key] ?? 0.1;
-    mesh.material.emissiveIntensity = 0.1 + level * 1.4 * pulse;
-  }
+  SquatRig.applyPose(rig.joints, pose);
+  SquatRig.applyActivation(rig.muscles, act, pulse);
 
   const cue = cueAt(elapsed);
   if (cue !== lastCue) {
@@ -302,7 +149,6 @@ function loop(now) {
   requestAnimationFrame(loop);
 }
 
-applyXray();
 requestAnimationFrame((t) => { last = t; loop(t); });
 
 // 테스트용 노출 (단계 함수 확인)
