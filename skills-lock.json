@@ -277,6 +277,12 @@
       "skillPath": "skills/backend-patterns/SKILL.md",
       "computedHash": "45bf0c6abd0549b56142690f49437bc59c7b4f55b62dc7717ef295ec6ed6617f"
     },
+    "bang-motion": {
+      "source": "bangtutorial/bang-motion",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "9f3666cc74a6cf647f6657cc1f9a6933ae1a6862189b11df6a256a350bdcfa61"
+    },
     "banner-design": {
       "source": "nextlevelbuilder/ui-ux-pro-max-skill",
       "sourceType": "github",
@@ -330,6 +336,18 @@
       "sourceType": "github",
       "skillPath": "skills/blueprint/SKILL.md",
       "computedHash": "c472e64befeb8291f2f3c44e2ff89fa9225b247321e8160347ae84609d783f1f"
+    },
+    "brag": {
+      "source": "latent-spaces/brag",
+      "sourceType": "github",
+      "skillPath": "skills/brag/SKILL.md",
+      "computedHash": "917eba27222a174bd05088df28a155c8e43a28be611d3694d409790adcc082d0"
+    },
+    "brag-slim": {
+      "source": "latent-spaces/brag",
+      "sourceType": "github",
+      "skillPath": "skills/brag-slim/SKILL.md",
+      "computedHash": "2bd6f704826635236b91d7d19a6d8d75f1dd8fc6de234a1e2eb645282b021298"
     },
     "brainstorm-experiments-existing": {
       "source": "phuryn/pm-skills",
@@ -1369,6 +1387,24 @@
       "skillPath": "skills/executive-onboarding-playbook/SKILL.md",
       "computedHash": "ae92d28ceab5a2a6d5bb3a97bdba067f811beb65ec50ad6e0f97b044dd33fde9"
     },
+    "explainer-default": {
+      "source": "Barty-Bart/motion-graphics",
+      "sourceType": "github",
+      "skillPath": "skills/explainer-default/SKILL.md",
+      "computedHash": "cd820260b79fdfbbf9bc84172fdca303feeb606a49d2b232500298ee75c460d9"
+    },
+    "explainer-engaging": {
+      "source": "Barty-Bart/motion-graphics",
+      "sourceType": "github",
+      "skillPath": "skills/explainer-engaging/SKILL.md",
+      "computedHash": "379f1bb5b8adff04831fe63b6134d1578cf199998ffb290ffc597e0a09a6e511"
+    },
+    "explainer-high-energy": {
+      "source": "Barty-Bart/motion-graphics",
+      "sourceType": "github",
+      "skillPath": "skills/explainer-high-energy/SKILL.md",
+      "computedHash": "79ac228cb3cf1f58439a9cd6d1cf7130765933fa38578c23b188afe971e41410"
+    },
     "fal-ai-media": {
       "source": "affaan-m/everything-claude-code",
       "sourceType": "github",
@@ -2150,6 +2186,12 @@
       "skillPath": "plugin/skills/learn-codebase/SKILL.md",
       "computedHash": "9142aab8302123f63d8db49430d1f59e2ff2bdcb885d6b3f054f22f7d92f5791"
     },
+    "lemo-opuscar": {
+      "source": "lemomo-ai/lemo-opuscar",
+      "sourceType": "github",
+      "skillPath": "plugin/skills/lemo-opuscar/SKILL.md",
+      "computedHash": "9eac59ef358adfea6d30ac6053b3543847cc72a435db30d4bb0708a6f39b9344"
+    },
     "lifecycle-play-advisor": {
       "source": "deanpeters/Product-Manager-Skills",
       "sourceType": "github",
@@ -2390,6 +2432,12 @@
       "skillPath": "skills/motion-advanced/SKILL.md",
       "computedHash": "38502b809de1d53e5c47ae65eafb7a70a6624ed25d578c403ca858c6fa25eb90"
     },
+    "motion-broll": {
+      "source": "Barty-Bart/motion-graphics",
+      "sourceType": "github",
+      "skillPath": "skills/motion-broll/SKILL.md",
+      "computedHash": "7dfd510bd0d467a07c7c12914434c05902bb1b94392ebbc1d2f525cbb8707241"
+    },
     "motion-foundations": {
       "source": "affaan-m/everything-claude-code",
       "sourceType": "github",
@@ -2485,6 +2533,12 @@
       "sourceType": "github",
       "skillPath": "skills/nuxt4-patterns/SKILL.md",
       "computedHash": "fb63d029610d16afd331b6049a284432a73ca88f4e9c12e4867eb206ca73521d"
+    },
+    "object-separation": {
+      "source": "Barty-Bart/motion-graphics",
+      "sourceType": "github",
+      "skillPath": "skills/object-separation/SKILL.md",
+      "computedHash": "8086daecb8234a0690859d04c5ac8f510a3d54f2df8b406786429d66a2682dea"
     },
     "observability-and-instrumentation": {
       "source": "addyosmani/agent-skills",
@@ -3349,6 +3403,12 @@
       "sourceType": "github",
       "skillPath": "skills/social-publisher/SKILL.md",
       "computedHash": "2df1232a3bfd2e4b0b1d6706fa79ec6d687d7b25248d1216709e72bcdcb9459e"
+    },
+    "sound-effects": {
+      "source": "Barty-Bart/motion-graphics",
+      "sourceType": "github",
+      "skillPath": "skills/sound-effects/SKILL.md",
+      "computedHash": "9f4ae4b86fb8d8387a6a926e3cbf5f7d2341cabc36a9efeeab3697506774afbb"
     },
     "source-driven-development": {
       "source": "addyosmani/agent-skills",
