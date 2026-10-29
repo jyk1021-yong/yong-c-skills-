@@ -48,15 +48,12 @@ description: 용개발 모드를 켭니다. "용개발 켜줘", "용개발", "�
 
 ## 5. 개발 순서
 
-1. 설계: `codebase-design`으로 기능 하나를 모듈 하나로 나누고, 모듈마다 제공(provides)과 사용(uses)을 정하기
-2. 영향 분석: `change-impact`로 고치기 전 영향 범위 보기 (계약의 uses를 따라 확인)
-3. 구현: `test-driven-development`로 테스트를 먼저 만들고 구현. 계약에 없는 연결은 만들지 않기
-4. 검증: `module-regression`으로 바뀐 기능과 하류 기능 확인, 계약 검사 통과
-5. 구조 대조: 계약에서 `docs/MODULES.md` 관계도를 다시 만들고 설계와 맞는지 보기 (`graphify`는 보조)
-6. 떼어내기 확인: 이 모듈을 다른 곳에서 쓸 때 가져갈 닫힌 집합을 기록
-7. 결정 기록: 선택이 있었으면 `architecture-decision-records`로 남기기
-
-원칙: 새 기능은 기존 모듈에 끼워 넣지 않고 모듈 하나로 추가합니다. 연결은 계약에 적은 것만 허용합니다. 자세한 규칙은 `references/WORKFLOW.md`의 1절과 4-1절.
+1. 설계: `codebase-design`으로 모듈 경계와 의존 방향 정하기
+2. 영향 분석: `change-impact`로 고치기 전 영향 범위 보기
+3. 구현: `test-driven-development`로 테스트를 먼저 만들고 구현
+4. 검증: `module-regression`으로 바뀐 기능과 하류 기능 확인
+5. 구조 대조: `graphify`로 관계도를 그려 설계와 맞는지 보기
+6. 결정 기록: 선택이 있었으면 `architecture-decision-records`로 남기기
 
 층 배치는 화면 → 모듈 한 방향만 허용합니다. 모듈은 순수 함수로 만들고, 현재 시각 같은 값은 인자로 받습니다.
 
