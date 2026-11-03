@@ -68,3 +68,10 @@
 - `docs/WORKFLOW.md`, `docs/tasks/TEMPLATE.md`
 - `.claude/skills/` 아래 `codebase-design`, `change-impact`, `test-driven-development`, `module-regression`, `architecture-decision-records` 폴더
 - `graphify` 설치 훅 (`.claude/hooks/session-start.sh`)
+
+## 8. 모델 (항상 opusplan)
+
+- 작업 전에 항상 `opusplan`을 씁니다. 계획·설계는 Opus, 실행·구현은 Sonnet입니다. 저장소 기본값은 `.claude/settings.json`의 `"model": "opusplan"`입니다.
+- 모델은 사용자가 `/model`로만 바꿀 수 있습니다. 다른 모델로 열렸으면 Claude가 `/model opusplan`을 안내합니다.
+- 서브에이전트 모델은 `.claude/agents/`에 고정되어 있습니다. 조사와 구현은 Sonnet, 설계와 검토는 Opus, 검사는 Haiku입니다.
+- 문구·숫자만 바꾸는 가벼운 수정은 `/model haiku`로 잠깐 바꿔도 됩니다.

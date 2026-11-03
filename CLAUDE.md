@@ -32,6 +32,6 @@
 
 ## 메모
 
-- 모델 선택(`/model`)은 스킬이 아니므로 이 목록에 넣지 않습니다. 설계는 Opus, 반복 구현은 Sonnet, 검사·문서는 Haiku를 쓰는 식으로 상황에 맞게 고릅니다.
+- 모델 선택(`/model`)은 스킬이 아니므로 이 목록에 넣지 않습니다. 작업 전에는 항상 **opusplan**(계획은 Opus, 실행은 Sonnet)을 씁니다. `.claude/settings.json`의 `model`이 기본값이고, 용개발을 켤 때 `.claude/skills/yong-dev`의 0번 규칙으로 다시 확인합니다. 검사·문서처럼 가벼운 단계는 Haiku를 씁니다.
 - `graphify`는 이 저장소가 아니라 사용자 환경(`~/.claude/skills/graphify`)에 설치돼 있습니다. 클라우드 세션에서는 `.claude/hooks/session-start.sh`가 설치합니다.
 - 새 프로젝트에 이 세트를 옮길 때는 이 파일과 `.claude/skills/` 아래 해당 폴더 6개를 함께 복사합니다.

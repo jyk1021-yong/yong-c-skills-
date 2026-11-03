@@ -3,6 +3,9 @@
 # 양식이나 진행 중인 작업이 없으면 그 부분은 아무것도 출력하지 않는다.
 set -euo pipefail
 
+echo "[용개발 모델] 이 저장소는 작업 전 항상 opusplan(계획은 Opus, 실행은 Sonnet)을 씁니다. 현재 세션이 다른 모델이면 시작 전에 사용자에게 /model opusplan 을 안내하세요."
+echo ""
+
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
 TASK_DIR="$PROJECT_DIR/docs/tasks"
 PROMPT_FILE="$TASK_DIR/START_PROMPT.md"
