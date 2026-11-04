@@ -16,6 +16,17 @@ description: 용개발 모드를 켭니다. "용개발 켜줘", "용개발", "�
 
 "용개발 켜줘"라고 하면 용개발 모드로 진행한다고 알리고, `references/START_PROMPT.md` 양식을 보여 줍니다. 사용자가 양식을 채워 주면 다음 단계로 갑니다.
 
+### graphify 자동 켜기
+
+용개발을 켤 때마다 `graphify`를 함께 켭니다. 순서는 다음과 같습니다.
+
+1. 설치 확인: `~/.claude/skills/graphify/SKILL.md`가 있고 `graphify` 명령이 `PATH`에서 실행되는지 봅니다.
+2. 없으면 설치합니다: `uv tool install graphifyy` 후 `graphify install --platform claude`. `uv`가 없으면 `pip install uv`로 먼저 설치합니다.
+3. 설치 후 한 줄로 알립니다: "graphify 준비됨 (5단계 구조 대조에 사용)".
+4. 그래프가 없으면 만들지 않습니다. 구현 후 5단계에서 `graphify update <저장소 경로>`로 만들거나 갱신합니다.
+
+클라우드 세션에서는 `.claude/hooks/session-start.sh`가 1~2단계를 미리 해 두므로, 이 단계는 설치 확인만 하고 넘어갑니다.
+
 ## 2. 필수 항목 확인
 
 다음 셋이 비어 있으면 코드를 만들기 전에 묻습니다.
