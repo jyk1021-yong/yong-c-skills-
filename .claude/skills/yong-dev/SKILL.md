@@ -27,6 +27,15 @@ description: 용개발 모드를 켭니다. "용개발 켜줘", "용개발", "�
 
 클라우드 세션에서는 `.claude/hooks/session-start.sh`가 1~2단계를 미리 해 두므로, 이 단계는 설치 확인만 하고 넘어갑니다.
 
+### 디자인 스킬 자동 켜기
+
+용개발을 켤 때마다 아래 두 스킬도 함께 켭니다. 5단계 검토 에이전트(`yong-reviewer`)가 UI 작업의 디자인을 같이 봅니다.
+
+- `hallmark`: AI 슬롭 감지 기준
+- `design-taste-frontend`: 프론트엔드 취향 규칙
+
+순서: `~/.claude/skills/` 또는 `.claude/skills/`에서 두 폴더를 확인합니다. 없으면 `npx skills add https://github.com/Nutlope/hallmark`와 `design-taste-frontend`가 든 저장소(tasteskill)를 설치합니다. 있으면 한 줄로 알립니다: "디자인 스킬 준비됨 (5단계 검토에 사용)".
+
 ## 2. 필수 항목 확인
 
 다음 셋이 비어 있으면 코드를 만들기 전에 묻습니다.
